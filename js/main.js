@@ -22,9 +22,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 const app = document.querySelector('#app'),
-      roomNav = document.querySelector('#roomNav'),
-      statsNav = document.querySelector('#statsNav'),
-      homeBtns = document.querySelectorAll('.homeBtns');
+      navRoomBtn = document.querySelector('#navRoomBtn'),
+      navStatsBtn = document.querySelector('#navStatsBtn'),
+      navLoginBtn = document.querySelector('#navLoginBtn'),
+      navSignUpBtn = document.querySelector('#navSignUpBtn'),
+      navLogoutBtn = document.querySelector('#navLogoutBtn'),
+      homeBtns = document.querySelectorAll('.homeBtns'),
+      provider = new firebase.auth.GoogleAuthProvider();
+      auth = firebase.auth();
 
 let refreshIntervalId = "",
     nhour = "",
@@ -37,8 +42,17 @@ let refreshIntervalId = "",
 
 // Event Listeners
 homeBtns.forEach(e => e.addEventListener('click', loadHome));
-roomNav.addEventListener('click', loadRooms);
-// statsNav.addEventListener('keydown', doAddEventListener);
+navRoomBtn.addEventListener('click', loadRooms);
+// navStatsBtn.addEventListener('keydown', doAddEventListener);
+navLoginBtn.addEventListener('click', doLogin);
+navLogoutBtn.addEventListener('click', doLogout);
+// navSignUpBtn.addEventListener('click', loadRooms);
+
+function doLogout(){}
+
+function doLogin(){
+    auth.signInWithPopup(provider);
+}
 
 function loadHome(){
     app.innerHTML = `

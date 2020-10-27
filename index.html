@@ -16,18 +16,18 @@
     <header>
         <!-- Dropdown Structure -->
         <ul id="accountDropdown" class="dropdown-content">
-            <li><a href="#!">Login</a></li>
-            <li><a href="#!">Sign up</a></li>
+            <li><a id="navLoginBtn" href="#!">Login</a></li>
+            <li><a id="navSignUpBtn" href="#!">Sign up</a></li>
             <li class="divider"></li>
-            <li><a href="#!">Log out</a></li>
+            <li><a id="navLogoutBtn" href="#!">Log out</a></li>
         </ul>
         <nav class="grey darken-3">
             <div class="nav-wrapper container">
             <a href="#!" class="brand-logo homeBtns">Typo</a>
             <ul class="right hide-on-med-and-down">
                 <li><a class="homeBtns">Home</a></li>
-                <li><a id="roomNav">Rooms</a></li>
-                <li><a id="statsNav">Stats</a></li>
+                <li><a id="navRoomBtn">Rooms</a></li>
+                <li><a id="navStatsBtn">Stats</a></li>
                 <!-- Dropdown Trigger -->
                 <li><a class="dropdown-trigger" href="#!" data-target="accountDropdown" id="accountDropdownBtn ">Guest<i class="material-icons right">arrow_drop_down</i></a></li>
             </ul>
@@ -44,6 +44,13 @@
 
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="./js/main.js"></script>
+
+    <!-- Firebase -->
+    <script defer src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>\
+    <script defer src="https://www.gstatic.com/firebasejs/7.24.0/firebase-auth.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/7.24.0/firebase-firestore.js"></script>
+    <script defer src="./js/init-firebase.js"></script>
+
+    <script defer src="./js/main.js"></script>
 </body>
 </html>
