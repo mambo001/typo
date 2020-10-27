@@ -28,6 +28,8 @@ const app = document.querySelector('#app'),
       navSignUpBtn = document.querySelector('#navSignUpBtn'),
       navLogoutBtn = document.querySelector('#navLogoutBtn'),
       homeBtns = document.querySelectorAll('.homeBtns'),
+      accountDropdownBtn = document.querySelector('#accountDropdownBtn'),
+      db = firebase.firestore(),
       provider = new firebase.auth.GoogleAuthProvider();
       auth = firebase.auth();
 
@@ -48,10 +50,25 @@ navLoginBtn.addEventListener('click', doLogin);
 navLogoutBtn.addEventListener('click', doLogout);
 // navSignUpBtn.addEventListener('click', loadRooms);
 
-function doLogout(){}
+auth.onAuthStateChanged((user) => {
+    if (user){
+        accountDropdownBtn.innerHTML = `
+            <img src="${user.photoURL}" alt="" class="profile-picture circle">
+            <i class="material-icons right">
+        `;
+    } else {
+        accountDropdownBtn.innerHTML = `
+            Guest <i class="material-icons right">
+        `;
+    }
+});
 
+function doLogout(){
+    auth.signOut();
+}
+    
 function doLogin(){
-    auth.signInWithPopup(provider);
+    auth.signInWithPopup(provider);   
 }
 
 function loadHome(){
@@ -68,24 +85,124 @@ function loadHome(){
 }
 
 function loadRooms(){
-    console.log('ey')
-    app.innerHTML = `
-    <div class="row">
-        <div class="col s12 m6">
-        <div class="card blue-grey darken-1">
-            <div class="card-content white-text">
-            <span class="card-title">Card Title</span>
-            <p>I am a very simple card. I am good at containing small bits of information.
-            I am convenient because I require little markup to use effectively.</p>
-            </div>
-            <div class="card-action">
-            <a href="#">This is a link</a>
-            <a href="#">This is a link</a>
-            </div>
-        </div>
-        </div>
-    </div>
-    `;
+    // firestore
+    // db
+    let roomsRef;
+    let unsubscribe;
+    let listArray = [];
+
+    // init load view
+    app.classList.add('row');
+
+    roomsRef = db.collection("rooms");
+
+    roomsRef
+        .get().then(function(querySnapshot) {
+
+            querySnapshot.forEach(function(doc) {
+                // doc.data() is never undefined for query doc snapshots
+                console.log(doc.data());
+                const roomID = doc.id;
+
+                listArray.push(`
+                    <div class="col s12 m4">
+                    <div class="card">
+                        <div class="card-content" style="min-height: 350px;">
+                        <span class="card-title">${doc.data().name}</span>
+                        <ul class="collection" id=list_${roomID}>
+                            ${doc.data().lobby_list.map(l => `<li class="collection-item">${l}</li>`).join('')}
+                        </ul>
+                        
+                        </div>
+                        <div class="card-action">
+                        <a href="#" style="width: 100%" class="btn joinRoom" data-roomid=${roomID}>Join Room</a>
+                        </div>
+                    </div>
+                    </div>
+                `);
+            });
+
+            app.innerHTML = listArray.join('');
+
+            auth.onAuthStateChanged((user) => {
+                if (user){
+                    roomsRef = db.collection("rooms");
+                    let joinRoom = document.querySelectorAll('.joinRoom');
+                    joinRoom.forEach((btn) => {
+                        btn.addEventListener('click', (e) => {
+                            console.log(e.target);
+                            selectedRoomRef = roomsRef.doc(btn.dataset.roomid);
+                            selectedRoomRef.update({
+                                lobby_list: firebase.firestore.FieldValue.arrayUnion(user.uid)
+                            });
+                            // e.dataset.roomid
+                            // add my userID/random generated name to 
+                            // lobby_list array in rooms collection
+                            // change to room lobby view 
+                            unsubscribe = selectedRoomRef
+                            .onSnapshot(function(doc) {
+                                console.log("Current data: ", doc.data());
+                                // add/update user lobby list table
+                                // using this data
+                                const lobbyItems = doc.data().lobby_list.map(name => {
+                                    return `<li class="collection-item">${ name }</li>`
+                                });
+
+                                document.querySelector(`#list_${btn.dataset.roomid}`).innerHTML = lobbyItems.join('');
+                            }); 
+                        });
+                    });
+                } else {
+                    accountDropdownBtn.innerHTML = `
+                        Guest <i class="material-icons right">
+                    `;
+                }
+            });
+        });
+    
+    
+}
+
+function doJoinRoom(){
+    // Join Room
+    // let joinRoom = document.querySelectorAll('.joinRoom');
+    // console.log(joinRoom)
+    auth.onAuthStateChanged((user) => {
+        if (user){
+            roomsRef = db.collection("rooms");
+            
+            joinRoom.forEach((btn) => {
+                btn.addEventListener('click', (e) => {
+                    console.log(e.target);
+                    selectedRoomRef = roomsRef.doc(e.dataset.roomid);
+                    selectedRoomRef.update({
+                        lobby_list: firebase.firestore.FieldValue.arrayUnion(user.uid)
+                    });
+                    // e.dataset.roomid
+                    // add my userID/random generated name to 
+                    // lobby_list array in rooms collection
+                    // change to room lobby view 
+                    unsubscribe = selectedRoomRef
+                    .onSnapshot(function(doc) {
+                        console.log("Current data: ", doc.data());
+                        // add/update user lobby list table
+                        // using this data
+                        const lobbyItems = argument.docs.map(doc => {
+                            return `<li>${ doc.data().name }</li>`
+                        });
+
+                        // lobbyList.innerHTML = lobbyItems.join('');
+                    }); 
+                });
+            });
+
+
+        } else {
+            accountDropdownBtn.innerHTML = `
+                Guest <i class="material-icons right">
+            `;
+        }
+    });
 }
 
 function AHT() {
