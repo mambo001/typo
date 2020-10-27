@@ -1,27 +1,78 @@
 window.addEventListener('DOMContentLoaded', () => {
+    // Load Views
+    // load default view
+    loadHome();
+
+
     // Variable Declaration
     const typingArea = document.querySelector('#typing-area'),
           wpmText = document.querySelector('#wpm-text');
 
 
-
+    var dropDownBtns = document.querySelectorAll('.dropdown-trigger');
+    var dropDownInstances = M.Dropdown.init(dropDownBtns, {});
 
 
     // Event Listeners
     document.addEventListener('keydown', doAddEventListener);
 
-
     //Typing init on load
     doInitTyping(data);
 });
 
+
+const app = document.querySelector('#app'),
+      roomNav = document.querySelector('#roomNav'),
+      statsNav = document.querySelector('#statsNav'),
+      homeBtns = document.querySelectorAll('.homeBtns');
+
 let refreshIntervalId = "",
-      nhour = "",
-      nmin = "",
-      nsec = "",
-      secondsElapsed = 0,
-      isPaused = false,
-      STARTED = false;
+    nhour = "",
+    nmin = "",
+    nsec = "",
+    secondsElapsed = 0,
+    isPaused = false,
+    STARTED = false;
+
+
+// Event Listeners
+homeBtns.forEach(e => e.addEventListener('click', loadHome));
+roomNav.addEventListener('click', loadRooms);
+// statsNav.addEventListener('keydown', doAddEventListener);
+
+function loadHome(){
+    app.innerHTML = `
+        <div id="" class="center-align">
+            <h1 id="wpm-text">Score</h1>
+            <p>How many words per minute can you type?</p>
+            <div class="card small flow-text hoverable" id="typing-area"></div>
+            <p id="ahtText">Start typing to begin...</p>
+        </div>
+    `;
+    //Typing init on load
+    doInitTyping(data);
+}
+
+function loadRooms(){
+    console.log('ey')
+    app.innerHTML = `
+    <div class="row">
+        <div class="col s12 m6">
+        <div class="card blue-grey darken-1">
+            <div class="card-content white-text">
+            <span class="card-title">Card Title</span>
+            <p>I am a very simple card. I am good at containing small bits of information.
+            I am convenient because I require little markup to use effectively.</p>
+            </div>
+            <div class="card-action">
+            <a href="#">This is a link</a>
+            <a href="#">This is a link</a>
+            </div>
+        </div>
+        </div>
+    </div>
+    `;
+}
 
 function AHT() {
     const ahtText = document.querySelector('#ahtText');

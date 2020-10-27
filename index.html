@@ -14,26 +14,30 @@
 <body>
 
     <header>
-        <nav>
+        <!-- Dropdown Structure -->
+        <ul id="accountDropdown" class="dropdown-content">
+            <li><a href="#!">Login</a></li>
+            <li><a href="#!">Sign up</a></li>
+            <li class="divider"></li>
+            <li><a href="#!">Log out</a></li>
+        </ul>
+        <nav class="grey darken-3">
             <div class="nav-wrapper container">
-                <a href="#" class="brand-logo">Typo</a>
-                <ul id="nav-mobile" class="right hide-on-med-and-down">
-                <!-- <li><a href="sass.html">Sass</a></li>
-                <li><a href="badges.html">Components</a></li>
-                <li><a href="collapsible.html">JavaScript</a></li> -->
-                </ul>
+            <a href="#!" class="brand-logo homeBtns">Typo</a>
+            <ul class="right hide-on-med-and-down">
+                <li><a class="homeBtns">Home</a></li>
+                <li><a id="roomNav">Rooms</a></li>
+                <li><a id="statsNav">Stats</a></li>
+                <!-- Dropdown Trigger -->
+                <li><a class="dropdown-trigger" href="#!" data-target="accountDropdown" id="accountDropdownBtn ">Guest<i class="material-icons right">arrow_drop_down</i></a></li>
+            </ul>
             </div>
         </nav>
     </header>
 
     <main>
-        <div class="container">
-            <div class="center-align">
-                <h1 id="wpm-text">Score</h1>
-                <p>How many words per minute can you type?</p>
-                <div class="card small flow-text hoverable" id="typing-area"></div>
-                <p id="ahtText">Start typing to begin...</p>
-            </div>
+        <div class="container" id="app">
+
         </div>
     </main>
 
