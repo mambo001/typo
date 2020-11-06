@@ -13,11 +13,11 @@ window.addEventListener('DOMContentLoaded', () => {
     var dropDownInstances = M.Dropdown.init(dropDownBtns, {});
 
 
-    // Event Listeners
-    document.addEventListener('keydown', doAddEventListener);
+    // // Event Listeners
+    // document.addEventListener('keydown', doAddEventListener);
 
-    //Typing init on load
-    doInitTyping(data);
+    // //Typing init on load
+    // doInitTyping(data);
 });
 
 
@@ -80,6 +80,10 @@ function loadHome(){
             <p id="ahtText">Start typing to begin...</p>
         </div>
     `;
+
+    // Event Listeners
+    document.addEventListener('keydown', doAddEventListener);
+
     //Typing init on load
     doInitTyping(data);
 }
@@ -90,6 +94,14 @@ function loadRooms(){
     let roomsRef;
     let unsubscribe;
     let listArray = [];
+    let refreshIntervalID = localStorage.refreshIntervalID || 0;
+
+
+    // Remove typing interval when 
+    if (refreshIntervalID){
+        console.log(refreshIntervalID)
+        clearInterval(refreshIntervalID)
+    }
 
     // init load view
     app.classList.add('row');
@@ -237,6 +249,8 @@ function doStart() {
         nhour = 0;
         STARTED = true;
         console.log("AHT started!");
+
+        localStorage.setItem("refreshIntervalID", refreshInterval);
     }
 }
   
