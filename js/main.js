@@ -18,6 +18,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // //Typing init on load
     // doInitTyping(data);
+
+    initGuestMode();
 });
 
 
@@ -63,12 +65,32 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
+function generateGuestID() {
+    return 'guest-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random()*12|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(12);
+    });
+}
+
 function doLogout(){
     auth.signOut();
 }
     
 function doLogin(){
     auth.signInWithPopup(provider);   
+}
+
+
+function initGuestMode(){
+    let guestID = localStorage.guestID;
+
+    if (!guestID){
+        let newGuestID = generateGuestID();
+
+        localStorage.setItem("guestID", newGuestID);
+    } else {
+        console.log("Existing user", guestID);
+    }
 }
 
 function loadHome(){
@@ -109,12 +131,25 @@ function loadRooms(){
     roomsRef = db.collection("rooms");
 
     roomsRef
-        .get().then(function(querySnapshot) {
+        // .get().then(function(querySnapshot) {
+        .onSnapshot(function(querySnapshot) {
+        //     console.log("Current data: ", doc.data());
+        //     // add/update user lobby list table
+        //     // using this data
+        //     const lobbyItems = doc.data().lobby_list.map(name => {
+        //         return `<li class="collection-item">${ name }</li>`
+        //     });
 
+        //     document.querySelector(`#list_${btn.dataset.roomid}`).innerHTML = lobbyItems.join('');
+        // }); 
+            // Clear listArray everychange
+            listArray = [];
             querySnapshot.forEach(function(doc) {
                 // doc.data() is never undefined for query doc snapshots
                 console.log(doc.data());
                 const roomID = doc.id;
+                
+
 
                 listArray.push(`
                     <div class="col s12 m4">
@@ -133,7 +168,7 @@ function loadRooms(){
                     </div>
                 `);
             });
-
+            console.log({listArray})
             app.innerHTML = listArray.join('');
 
             auth.onAuthStateChanged((user) => {
@@ -165,9 +200,36 @@ function loadRooms(){
                         });
                     });
                 } else {
-                    accountDropdownBtn.innerHTML = `
-                        Guest <i class="material-icons right">
-                    `;
+                    // accountDropdownBtn.innerHTML = `
+                    //     ${localStorage.guestID || "Guest"} <i class="material-icons right">
+                    // `;
+                    roomsRef = db.collection("rooms");
+                    let guestID = localStorage.guestID || generateGuestID();
+                    let joinRoom = document.querySelectorAll('.joinRoom');
+                    joinRoom.forEach((btn) => {
+                        btn.addEventListener('click', (e) => {
+                            console.log(e.target);
+                            selectedRoomRef = roomsRef.doc(btn.dataset.roomid);
+                            selectedRoomRef.update({
+                                lobby_list: firebase.firestore.FieldValue.arrayUnion(guestID)
+                            });
+                            // e.dataset.roomid
+                            // add my userID/random generated name to 
+                            // lobby_list array in rooms collection
+                            // change to room lobby view 
+                            unsubscribe = selectedRoomRef
+                            .onSnapshot(function(doc) {
+                                console.log("Current data: ", doc.data());
+                                // add/update user lobby list table
+                                // using this data
+                                const lobbyItems = doc.data().lobby_list.map(name => {
+                                    return `<li class="collection-item">${ name }</li>`
+                                });
+
+                                document.querySelector(`#list_${btn.dataset.roomid}`).innerHTML = lobbyItems.join('');
+                            }); 
+                        });
+                    });
                 }
             });
         });
