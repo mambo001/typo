@@ -22,7 +22,6 @@ window.addEventListener('DOMContentLoaded', () => {
     initGuestMode();
 });
 
-
 const app = document.querySelector('#app'),
       navRoomBtn = document.querySelector('#navRoomBtn'),
       navStatsBtn = document.querySelector('#navStatsBtn'),
@@ -133,15 +132,6 @@ function loadRooms(){
     roomsRef
         // .get().then(function(querySnapshot) {
         .onSnapshot(function(querySnapshot) {
-        //     console.log("Current data: ", doc.data());
-        //     // add/update user lobby list table
-        //     // using this data
-        //     const lobbyItems = doc.data().lobby_list.map(name => {
-        //         return `<li class="collection-item">${ name }</li>`
-        //     });
-
-        //     document.querySelector(`#list_${btn.dataset.roomid}`).innerHTML = lobbyItems.join('');
-        // }); 
             // Clear listArray everychange
             listArray = [];
             querySnapshot.forEach(function(doc) {
@@ -153,39 +143,44 @@ function loadRooms(){
 
                 listArray.push(`
                     <div class="col s12 m4">
-                    <div class="card">
+                    <div class="card" data-roomid=${roomID}>
                         <div class="card-content" style="min-height: 350px;">
-                        <span class="card-title">${doc.data().name}</span>
+                        <div class="card-title" style="display: flex; justify-content: space-between;">
+                            <span class="card-title">${doc.data().name}</span>
+                            <span style="font-size: 16px;">Status: ${doc.data().status}</span>
+                        </div>
                         <ul class="collection" id=list_${roomID}>
                             ${doc.data().lobby_list.map(l => `<li class="collection-item">${l}</li>`).join('')}
                         </ul>
                         
                         </div>
                         <div class="card-action">
-                        <a href="#" style="width: 100%" class="btn joinRoom" data-roomid=${roomID}>Join Room</a>
+                            <a href="#" style="width: 100%; margin: 2.5px 0px" class="btn joinRoom">Join Room</a>
+                            <a href="#" style="width: 100%; margin: 2.5px 0px" class="btn blue startGame">Start Game</a>
                         </div>
                     </div>
                     </div>
                 `);
             });
             console.log({listArray})
+            listArray.reverse();
             app.innerHTML = listArray.join('');
 
             auth.onAuthStateChanged((user) => {
                 if (user){
                     roomsRef = db.collection("rooms");
+                    let guestID = localStorage.guestID || generateGuestID();
                     let joinRoom = document.querySelectorAll('.joinRoom');
+                    let startGame = document.querySelectorAll('.startGame');
+                    // Join Room Listener
                     joinRoom.forEach((btn) => {
                         btn.addEventListener('click', (e) => {
+                            const ROOM_ID = btn.closest(".card").dataset.roomid;
                             console.log(e.target);
-                            selectedRoomRef = roomsRef.doc(btn.dataset.roomid);
+                            selectedRoomRef = roomsRef.doc(ROOM_ID);
                             selectedRoomRef.update({
                                 lobby_list: firebase.firestore.FieldValue.arrayUnion(user.uid)
                             });
-                            // e.dataset.roomid
-                            // add my userID/random generated name to 
-                            // lobby_list array in rooms collection
-                            // change to room lobby view 
                             unsubscribe = selectedRoomRef
                             .onSnapshot(function(doc) {
                                 console.log("Current data: ", doc.data());
@@ -195,7 +190,59 @@ function loadRooms(){
                                     return `<li class="collection-item">${ name }</li>`
                                 });
 
-                                document.querySelector(`#list_${btn.dataset.roomid}`).innerHTML = lobbyItems.join('');
+                                document.querySelector(`#list_${ROOM_ID}`).innerHTML = lobbyItems.join('');
+                            }); 
+                        });
+                    });
+
+                    // Start Game Listener
+                    startGame.forEach((btn) => {
+                        btn.addEventListener('click', (e) => {
+                            const ROOM_ID = btn.closest(".card").dataset.roomid;
+                            console.log(e.target);
+                            selectedRoomRef = roomsRef.doc(ROOM_ID);
+                            selectedRoomRef.update({
+                                status: "busy",
+                                startTime: firebase.firestore.Timestamp.now()
+                            });
+
+                            unsubscribe = selectedRoomRef
+                            .onSnapshot(function(doc) {
+                                let startTimeSeconds = doc.data().startTime.seconds;
+                                let currentTimeSeconds = firebase.firestore.Timestamp.now().seconds;
+                                let timeDifference = startTimeSeconds - currentTimeSeconds;
+                                let BASE_TIMER = (10 - timeDifference) * 1000;
+                                // console.log("Current data: ", doc.data());
+                                console.log("Current data: ", startTimeSeconds);
+                                console.log("Now: " + currentTimeSeconds);
+                                console.log("Difference: ", timeDifference);
+                                let timerInterval
+                                Swal.fire({
+                                title: 'Auto close alert!',
+                                html: 'I will close in <b></b> milliseconds.',
+                                timer: BASE_TIMER,
+                                timerProgressBar: true,
+                                willOpen: () => {
+                                    Swal.showLoading()
+                                    timerInterval = setInterval(() => {
+                                    const content = Swal.getContent()
+                                    if (content) {
+                                        const b = content.querySelector('b')
+                                        if (b) {
+                                        b.textContent = Swal.getTimerLeft()
+                                        }
+                                    }
+                                    }, 100)
+                                },
+                                onClose: () => {
+                                    clearInterval(timerInterval)
+                                }
+                                }).then((result) => {
+                                    /* Read more about handling dismissals below */
+                                    if (result.dismiss === Swal.DismissReason.timer) {
+                                        console.log('I was closed by the timer')
+                                    }
+                                })
                             }); 
                         });
                     });
@@ -206,10 +253,13 @@ function loadRooms(){
                     roomsRef = db.collection("rooms");
                     let guestID = localStorage.guestID || generateGuestID();
                     let joinRoom = document.querySelectorAll('.joinRoom');
+                    let startGame = document.querySelectorAll('.startGame');
+                    // Join Room Listener
                     joinRoom.forEach((btn) => {
                         btn.addEventListener('click', (e) => {
+                            const ROOM_ID = btn.closest(".card").dataset.roomid;
                             console.log(e.target);
-                            selectedRoomRef = roomsRef.doc(btn.dataset.roomid);
+                            selectedRoomRef = roomsRef.doc(ROOM_ID);
                             selectedRoomRef.update({
                                 lobby_list: firebase.firestore.FieldValue.arrayUnion(guestID)
                             });
@@ -226,10 +276,64 @@ function loadRooms(){
                                     return `<li class="collection-item">${ name }</li>`
                                 });
 
-                                document.querySelector(`#list_${btn.dataset.roomid}`).innerHTML = lobbyItems.join('');
+                                document.querySelector(`#list_${ROOM_ID}`).innerHTML = lobbyItems.join('');
                             }); 
                         });
                     });
+
+                    // Start Game Listener
+                    startGame.forEach((btn) => {
+                        btn.addEventListener('click', (e) => {
+                            const ROOM_ID = btn.closest(".card").dataset.roomid;
+                            console.log(e.target);
+                            selectedRoomRef = roomsRef.doc(ROOM_ID);
+                            selectedRoomRef.update({
+                                status: "busy",
+                                startTime: firebase.firestore.Timestamp.now()
+                            });
+
+                            unsubscribe = selectedRoomRef
+                            .onSnapshot(function(doc) {
+                                let startTimeSeconds = doc.data().startTime.seconds;
+                                let currentTimeSeconds = firebase.firestore.Timestamp.now().seconds;
+                                let timeDifference = startTimeSeconds - currentTimeSeconds;
+                                let BASE_TIMER = (10 - timeDifference) * 1000;
+                                // console.log("Current data: ", doc.data());
+                                console.log("Current data: ", startTimeSeconds);
+                                console.log("Now: " + currentTimeSeconds);
+                                console.log("Difference: ", timeDifference);
+                                let timerInterval
+                                Swal.fire({
+                                title: 'Auto close alert!',
+                                html: 'I will close in <b></b> milliseconds.',
+                                timer: BASE_TIMER,
+                                timerProgressBar: true,
+                                willOpen: () => {
+                                    Swal.showLoading()
+                                    timerInterval = setInterval(() => {
+                                    const content = Swal.getContent()
+                                    if (content) {
+                                        const b = content.querySelector('b')
+                                        if (b) {
+                                        b.textContent = Swal.getTimerLeft()
+                                        }
+                                    }
+                                    }, 100)
+                                },
+                                onClose: () => {
+                                    clearInterval(timerInterval)
+                                }
+                                }).then((result) => {
+                                    /* Read more about handling dismissals below */
+                                    if (result.dismiss === Swal.DismissReason.timer) {
+                                        console.log('I was closed by the timer')
+                                    }
+                                })
+                            }); 
+                        });
+                    });
+
+                    // 
                 }
             });
         });
