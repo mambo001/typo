@@ -157,6 +157,7 @@ function loadRooms(){
                         <div class="card-action">
                             <a href="#" style="width: 100%; margin: 2.5px 0px" class="btn joinRoom">Join Room</a>
                             <a href="#" style="width: 100%; margin: 2.5px 0px" class="btn blue startGame">Start Game</a>
+                            <a href="#" style="width: 100%; margin: 2.5px 0px" class="btn grey resetRoom">Reset Room</a>
                         </div>
                     </div>
                     </div>
@@ -172,6 +173,7 @@ function loadRooms(){
                     let guestID = localStorage.guestID || generateGuestID();
                     let joinRoom = document.querySelectorAll('.joinRoom');
                     let startGame = document.querySelectorAll('.startGame');
+                    let resetRoom = document.querySelectorAll('.resetRoom');
                     // Join Room Listener
                     joinRoom.forEach((btn) => {
                         btn.addEventListener('click', (e) => {
@@ -218,9 +220,10 @@ function loadRooms(){
                                 console.log("Difference: ", timeDifference);
                                 let timerInterval
                                 Swal.fire({
-                                title: 'Auto close alert!',
-                                html: 'I will close in <b></b> milliseconds.',
+                                title: 'Get ready!',
+                                html: 'Game will start in <b></b> milliseconds.',
                                 timer: BASE_TIMER,
+                                allowOutsideClick: false,
                                 timerProgressBar: true,
                                 willOpen: () => {
                                     Swal.showLoading()
@@ -235,17 +238,34 @@ function loadRooms(){
                                     }, 100)
                                 },
                                 onClose: () => {
-                                    clearInterval(timerInterval)
+                                    clearInterval(timerInterval);
                                 }
                                 }).then((result) => {
                                     /* Read more about handling dismissals below */
                                     if (result.dismiss === Swal.DismissReason.timer) {
                                         console.log('I was closed by the timer')
+
+                                        // unsubscribe to firebase changes
+                                        unsubscribe && unsubscribe();
                                     }
                                 })
                             }); 
                         });
                     });
+
+                    resetRoom.forEach((btn) => {
+                        btn.addEventListener('click', (e) => {
+                            const ROOM_ID = btn.closest(".card").dataset.roomid;
+                            console.log(e.target);
+                            selectedRoomRef = roomsRef.doc(ROOM_ID);
+                            selectedRoomRef.update({
+                                status: "open",
+                                startTime: "",
+                                lobby_list: []
+                            });
+                        });
+                    });
+
                 } else {
                     // accountDropdownBtn.innerHTML = `
                     //     ${localStorage.guestID || "Guest"} <i class="material-icons right">
@@ -254,6 +274,7 @@ function loadRooms(){
                     let guestID = localStorage.guestID || generateGuestID();
                     let joinRoom = document.querySelectorAll('.joinRoom');
                     let startGame = document.querySelectorAll('.startGame');
+                    let resetRoom = document.querySelectorAll('.resetRoom');
                     // Join Room Listener
                     joinRoom.forEach((btn) => {
                         btn.addEventListener('click', (e) => {
@@ -297,17 +318,19 @@ function loadRooms(){
                                 let startTimeSeconds = doc.data().startTime.seconds;
                                 let currentTimeSeconds = firebase.firestore.Timestamp.now().seconds;
                                 let timeDifference = startTimeSeconds - currentTimeSeconds;
-                                let BASE_TIMER = (10 - timeDifference) * 1000;
+                                // let BASE_TIMER = (10 - timeDifference) * 1000;
+                                let BASE_TIMER = (3 - timeDifference) * 1000;
                                 // console.log("Current data: ", doc.data());
                                 console.log("Current data: ", startTimeSeconds);
                                 console.log("Now: " + currentTimeSeconds);
                                 console.log("Difference: ", timeDifference);
                                 let timerInterval
                                 Swal.fire({
-                                title: 'Auto close alert!',
-                                html: 'I will close in <b></b> milliseconds.',
+                                title: 'Get ready!',
+                                html: 'Game will start in <b></b> milliseconds.',
                                 timer: BASE_TIMER,
                                 timerProgressBar: true,
+                                allowOutsideClick: false,
                                 willOpen: () => {
                                     Swal.showLoading()
                                     timerInterval = setInterval(() => {
@@ -317,7 +340,7 @@ function loadRooms(){
                                         if (b) {
                                         b.textContent = Swal.getTimerLeft()
                                         }
-                                    }
+                                    }   
                                     }, 100)
                                 },
                                 onClose: () => {
@@ -327,9 +350,24 @@ function loadRooms(){
                                     /* Read more about handling dismissals below */
                                     if (result.dismiss === Swal.DismissReason.timer) {
                                         console.log('I was closed by the timer')
+                                        // unsubscribe to firebase changes
+                                        unsubscribe && unsubscribe();
                                     }
                                 })
                             }); 
+                        });
+                    });
+
+                    resetRoom.forEach((btn) => {
+                        btn.addEventListener('click', (e) => {
+                            const ROOM_ID = btn.closest(".card").dataset.roomid;
+                            console.log(e.target);
+                            selectedRoomRef = roomsRef.doc(ROOM_ID);
+                            selectedRoomRef.update({
+                                status: "open",
+                                startTime: "",
+                                lobby_list: []
+                            });
                         });
                     });
 
