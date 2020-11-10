@@ -200,12 +200,21 @@ function loadRooms(){
                     // Start Game Listener
                     startGame.forEach((btn) => {
                         btn.addEventListener('click', (e) => {
-                            const ROOM_ID = btn.closest(".card").dataset.roomid;
+                            const roomCard = btn.closest(".card");
+                            const ROOM_ID = roomCard.dataset.roomid;
+                            const START_DATE = firebase.firestore.Timestamp.now();
+                            const playersItemElement = roomCard.querySelectorAll(".collection-item");
+                            const PLAYERS_LIST = Array.from(playersItemElement);
+                            const roomData = {
+                                room_ID: ROOM_ID,
+                                start_date: START_DATE,
+                                players: PLAYERS_LIST
+                            };
                             console.log(e.target);
                             selectedRoomRef = roomsRef.doc(ROOM_ID);
                             selectedRoomRef.update({
                                 status: "busy",
-                                startTime: firebase.firestore.Timestamp.now()
+                                startDate: START_DATE
                             });
 
                             unsubscribe = selectedRoomRef
@@ -213,7 +222,8 @@ function loadRooms(){
                                 let startTimeSeconds = doc.data().startTime.seconds;
                                 let currentTimeSeconds = firebase.firestore.Timestamp.now().seconds;
                                 let timeDifference = startTimeSeconds - currentTimeSeconds;
-                                let BASE_TIMER = (10 - timeDifference) * 1000;
+                                // let BASE_TIMER = (10 - timeDifference) * 1000;
+                                let BASE_TIMER = (3 - timeDifference) * 1000;
                                 // console.log("Current data: ", doc.data());
                                 console.log("Current data: ", startTimeSeconds);
                                 console.log("Now: " + currentTimeSeconds);
@@ -223,9 +233,12 @@ function loadRooms(){
                                 title: 'Get ready!',
                                 html: 'Game will start in <b></b> milliseconds.',
                                 timer: BASE_TIMER,
-                                allowOutsideClick: false,
                                 timerProgressBar: true,
+                                allowOutsideClick: false,
                                 willOpen: () => {
+                                    //todo render typing game view
+                                    doRenderNewGame(roomData);
+                                    
                                     Swal.showLoading()
                                     timerInterval = setInterval(() => {
                                     const content = Swal.getContent()
@@ -234,17 +247,16 @@ function loadRooms(){
                                         if (b) {
                                         b.textContent = Swal.getTimerLeft()
                                         }
-                                    }
+                                    }   
                                     }, 100)
                                 },
                                 onClose: () => {
-                                    clearInterval(timerInterval);
+                                    clearInterval(timerInterval)
                                 }
                                 }).then((result) => {
                                     /* Read more about handling dismissals below */
                                     if (result.dismiss === Swal.DismissReason.timer) {
                                         console.log('I was closed by the timer')
-
                                         // unsubscribe to firebase changes
                                         unsubscribe && unsubscribe();
                                     }
@@ -305,23 +317,32 @@ function loadRooms(){
                     // Start Game Listener
                     startGame.forEach((btn) => {
                         btn.addEventListener('click', (e) => {
-                            const ROOM_ID = btn.closest(".card").dataset.roomid;
+                            const roomCard = btn.closest(".card");
+                            const ROOM_ID = roomCard.dataset.roomid;
+                            const START_DATE = firebase.firestore.Timestamp.now();
+                            const playersItemElement = roomCard.querySelectorAll(".collection-item");
+                            const PLAYERS_LIST = Array.from(playersItemElement).map(li => li.textContent);
+                            const roomData = {
+                                room_ID: ROOM_ID,
+                                start_date: START_DATE,
+                                players: PLAYERS_LIST
+                            };
                             console.log(e.target);
                             selectedRoomRef = roomsRef.doc(ROOM_ID);
                             selectedRoomRef.update({
                                 status: "busy",
-                                startTime: firebase.firestore.Timestamp.now()
+                                startDate: START_DATE
                             });
 
                             unsubscribe = selectedRoomRef
                             .onSnapshot(function(doc) {
-                                let startTimeSeconds = doc.data().startTime.seconds;
+                                let startTimeSeconds = START_DATE.seconds;
                                 let currentTimeSeconds = firebase.firestore.Timestamp.now().seconds;
                                 let timeDifference = startTimeSeconds - currentTimeSeconds;
                                 // let BASE_TIMER = (10 - timeDifference) * 1000;
                                 let BASE_TIMER = (3 - timeDifference) * 1000;
                                 // console.log("Current data: ", doc.data());
-                                console.log("Current data: ", startTimeSeconds);
+                                console.log("Current date: ", startTimeSeconds);
                                 console.log("Now: " + currentTimeSeconds);
                                 console.log("Difference: ", timeDifference);
                                 let timerInterval
@@ -332,6 +353,9 @@ function loadRooms(){
                                 timerProgressBar: true,
                                 allowOutsideClick: false,
                                 willOpen: () => {
+                                    //todo render typing game view
+                                    doRenderNewGame(roomData);
+
                                     Swal.showLoading()
                                     timerInterval = setInterval(() => {
                                     const content = Swal.getContent()
@@ -377,6 +401,30 @@ function loadRooms(){
         });
     
     
+}
+
+function doRenderNewGame(data){
+    // todo add new game collection in game document - done
+    // add progress bar of players progress -> subscribe to changes -> rate limit
+    // add typing game view
+    
+    console.log(data);
+    let gamesRef;
+    let gameID = `game_${generateCharactersID(20)}`;
+
+    gamesRef = db.collection("games").doc(gameID);
+    gamesRef.set({
+        players: data.players,
+        room_ID: data.room_ID,
+        start_date: data.start_date
+    })
+    .then(function() {
+        console.log("Document successfully written!");
+    })
+    .catch(function(error) {
+        console.error("Error writing document: ", error);
+    });
+
 }
 
 function doJoinRoom(){
@@ -493,6 +541,16 @@ const data = [
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
+
+function generateCharactersID(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+       result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+ }
 
 
 function doInitTyping(data){
